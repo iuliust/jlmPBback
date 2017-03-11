@@ -45,9 +45,6 @@ class User(AbstractBaseUser):
     city = models.CharField(_('Ville'), max_length=100,blank=True)
     country_code = models.CharField(_('Code du pays'), max_length=2, blank=True)
 
-    location_lat = models.CharField(max_length=20, blank=True)
-    location_long = models.CharField(max_length=20, blank=True)
-
     access_token = models.CharField(_('Access Token'), max_length=255, blank=True)
 
     USERNAME_FIELD = 'email'
