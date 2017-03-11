@@ -9,7 +9,7 @@ def populate_numberslocation(apps, schema_editor):
     with open('callcenter/migrations/0003_populate_numberslocation.tsv', 'r', encoding='utf-8') as f:
         reader = csv.reader(f, delimiter='\t')
         for line in reader:
-            code, pays, zone, indicatif, _, location_lat, location_long, *_ = line
+            code, pays, zone, indicatif, _, location_lat, location_long, _, _ = line
             NumbersLocation.objects.create(
                 code=code,
                 pays=pays,

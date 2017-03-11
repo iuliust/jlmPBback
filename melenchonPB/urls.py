@@ -19,7 +19,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 
 from callcenter.views import AngularApp
-from callcenter.views import api_user_myid, api_user_achievements, api_test_simulatecall, api_leaderboard, api_basic_information, api_user, api_test_socket
+from callcenter.views import api_user_myid, api_user_achievements, api_test_simulatecall, api_leaderboard,\
+    api_basic_information, api_test_socket, UserAPI
 from callcenter.views import webhook_note, ObtainJsonWebToken
 from rest_framework_jwt.views import refresh_jwt_token
 from accounts import urls as accounts_urls
@@ -47,8 +48,7 @@ urlpatterns = [
     url(r'^api/user/achievements$', api_user_achievements.as_view()),
 
     #REST_FRAMEWORK
-    url(r'^api/user$', api_user.as_view()),
-    url(r'^api/user/(?P<id>[0-9]+)$', api_user.as_view()),
+    url(r'^api/user$', UserAPI.as_view()),
 
     #AUTRES URLS
     url(r'^admin', admin.site.urls),

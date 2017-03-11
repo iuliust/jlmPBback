@@ -259,7 +259,7 @@ class api_basic_information(APIView):
         return HttpResponse(data)
 
 
-class API_User(RetrieveUpdateAPIView):
+class UserAPI(RetrieveUpdateAPIView):
     serializer_class = UserExtendSerializer
 
     def get_object(self):
