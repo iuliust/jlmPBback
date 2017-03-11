@@ -20,9 +20,10 @@ from django.contrib import admin
 
 from callcenter.views import AngularApp
 from callcenter.views import api_user_myid, api_user_achievements, api_test_simulatecall, api_leaderboard, api_basic_information, api_user, api_test_socket
-from callcenter.views import webhook_note
-from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
+from callcenter.views import webhook_note, ObtainJsonWebToken
+from rest_framework_jwt.views import refresh_jwt_token
 from accounts import urls as accounts_urls
+
 
 urlpatterns = [
 
@@ -34,7 +35,7 @@ urlpatterns = [
 
     #API
         #TOKEN
-    url(r'^api/token/auth', obtain_jwt_token),
+    url(r'^api/token/auth', ObtainJsonWebToken.as_view()),
     url(r'^api/token/refresh', refresh_jwt_token),
         #API - NO TOKEN REQUIRED
     url(r'^api/test_websocket$', api_test_socket.as_view()),
