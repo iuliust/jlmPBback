@@ -8,10 +8,7 @@ from rest_framework import permissions
 from rest_framework.generics import RetrieveUpdateAPIView
 from django.http import Http404
 
-from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
-from rest_framework_jwt.settings import api_settings
-
 
 #Project imports
 from callcenter.achievements import *
@@ -157,23 +154,7 @@ class api_test_simulatecall(APIView):
         return HttpResponse(200)
 
 
-# /api/user/infos/
-class api_user_myid(APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    def get(self, request):
-        user = request.user
-
-        userID = user.id
-        username = user.username
-
-        data = json.dumps({     'id': userID,
-                                'username': username
-                        })
-
-        return HttpResponse(data)
-
-
-# /api/user/achievements/
+# /api/current_user/achievements/
 class api_user_achievements(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     def get(self, request):
@@ -261,32 +242,7 @@ class api_basic_information(APIView):
 
 class UserAPI(RetrieveUpdateAPIView):
     serializer_class = UserExtendSerializer
+    authentication_classes = (SessionAuthentication,)
 
     def get_object(self):
         return self.request.user.UserExtend
-
-
-class ObtainJsonWebToken(APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    authentication_classes = (SessionAuthentication,)
-
-    def get(self, request, *args, **kwargs):
-        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-        jwt_response_payload_handler = api_settings.JWT_RESPONSE_PAYLOAD_HANDLER
-
-        user = request.user
-        payload = jwt_payload_handler(user)
-        token = jwt_encode_handler(payload)
-        response_data = jwt_response_payload_handler(token, user, request)
-
-        response = Response(response_data)
-
-        # if api_settings.JWT_AUTH_COOKIE:
-        #     expiration = (datetime.utcnow() +
-        #                   api_settings.JWT_EXPIRATION_DELTA)
-        #     response.set_cookie(api_settings.JWT_AUTH_COOKIE,
-        #                         response.data['token'],
-        #                         expires=expiration,
-        #                         httponly=True)
-        return response
