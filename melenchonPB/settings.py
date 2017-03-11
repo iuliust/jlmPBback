@@ -108,6 +108,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'accounts.User'
 
+AUTHENTICATION_BACKENDS = [
+    'accounts.backend.JLMOAuth2'
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
@@ -168,3 +172,4 @@ SCOPE_SEPARATOR = ' '
 PROFILE_URL = 'https://auth.jlm2017.fr/voir_profil'
 CLIENT_ID = "melenphone"
 CLIENT_SECRET = "tres_secret"
+LOGIN_REDIRECT = 'angular_app'

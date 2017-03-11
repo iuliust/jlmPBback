@@ -43,8 +43,8 @@ class JLMOAuth2(object):
 
                 email = profile.get('email', None)
                 location = profile.get('location', {})
-                city = profile.get('city') or ''
-                country_code = profile.get('country_code') or ''
+                city = location.get('city') or ''
+                country_code = location.get('country_code') or ''
                 if email:
                     user, created = User.objects.get_or_create(email=email, defaults={
                         'city': city,

@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^webhook/note', webhook_note.as_view()),
 
     # accounts urls
-    url(r'^accounts/', include(accounts_urls, namespace='accounts')),
+    url(r'^', include(accounts_urls, namespace='accounts')),
 
     #API
         #TOKEN
