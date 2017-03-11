@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'accounts',
     'callcenter',
     'rest_framework',
     'channels',
@@ -152,3 +153,13 @@ REST_FRAMEWORK = {
 JWT_AUTH = {
     'JWT_ALLOW_REFRESH': True,
 }
+
+# jlm-auth parameters
+REDIRECT_BASE = 'http://localhost:8000'
+AUTHORIZATION_URL = 'https://auth.jlm2017.fr/autoriser'
+ACCESS_TOKEN_URL = 'https://auth.jlm2017.fr/token'
+DEFAULT_SCOPE = ['view_profile']
+SCOPE_SEPARATOR = ' '
+PROFILE_URL = 'https://auth.jlm2017.fr/voir_profil'
+CLIENT_ID = "melenphone"
+CLIENT_SECRET = "tres_secret"
