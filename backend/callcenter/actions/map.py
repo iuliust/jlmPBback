@@ -48,9 +48,10 @@ def setupLocationUser(user):
     userExtend.save()
 
 def randomLocation():
-    count = NumbersLocation.objects.all().count()
+    locations = NumbersLocation.objects.filter(pays=33)
+    count = locations.count()
     randomIndex = randint(0,count-1)
-    randomPlace = NumbersLocation.objects.all()[randomIndex]
+    randomPlace = locations[randomIndex]
     return randomPlace.location_lat, randomPlace.location_long
 
 def getCallerLocation(caller):
@@ -70,18 +71,17 @@ def getCallerLocation(caller):
 def getCalledLocation(number):
     countryCode = phonenumbers.parse("+" + number, None).country_code
     if countryCode == 33: #Si on est en france, on cherche plus précisement
-        if NumbersLocation.objects.filter(pays="33", zone=number[2:3], indicatif=number[3:5]).exists():
-            calledPlace = NumbersLocation.objects.filter(pays=33, zone=number[2:3], indicatif=number[3:5])[0]
+        try:
+            calledPlace = NumbersLocation.objects.get(pays=33, zone=number[2:3], indicatif=number[3:5])
             calledLat = calledPlace.location_lat
             calledLng = calledPlace.location_long
-        else:
+        except NumbersLocation.DoesNotExist:
             calledLat, calledLng = randomLocation()
     else:
         try:
-            NumbersLocation.objects.get(pays=str(countryCode)) #Si le pays est dans la bdd
-            calledPlace = NumbersLocation.objects.filter(pays=str(countryCode))[0]
+            calledPlace = NumbersLocation.objects.get(pays=str(countryCode))
             calledLat = calledPlace.location_lat
             calledLng = calledPlace.location_long
-        except NumbersLocation.DoesNotExist: #Sinon on random
+        except NumbersLocation.DoesNotExist:
             calledLat, calledLng = randomLocation()
     return calledLat, calledLng
