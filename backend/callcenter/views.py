@@ -4,7 +4,6 @@ import json
 import random
 
 import redis
-from django.conf import settings
 from django.http import Http404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -19,10 +18,9 @@ from channels import Channel
 from accounts.models import User
 from callcenter.actions.leaderboard import generate_leaderboards
 from callcenter.actions.map import getCallerLocation, getCalledLocation, randomLocation
-from callcenter.actions.phi import EarnPhi
-from callcenter.actions.score import get_global_scores, update_scores
-from callcenter.actions.achievements import get_achievements, update_achievements
-
+from callcenter.actions.score import get_global_scores
+from callcenter.actions.achievements import get_achievements
+from callcenter.actions.calls import handle_call
 from callcenter.exceptions import CallerCreationError, CallerValidationError
 from callcenter.models import *
 from callcenter.serializers import UserSerializer, UserExtendSerializer, CallhubCredentialsSerializer
@@ -37,66 +35,11 @@ class CallhubWebhookView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
+        username = request.data['data']['agent']['username']
+        number = request.data['data']['contact']
+        now = timezone.now()
 
-        jsondata = request.body.decode('utf-8')
-        data = json.loads(jsondata)
-
-        # Latitude et longitude de l'appelant
-        callerAgentUsername = data['data']['agent']['username']
-        callerLat, callerLng = getCallerLocation(callerAgentUsername)
-
-        # Latitude et longitude de l'appellé
-        calledNumber = data['data']['contact']
-        calledLat, calledLng = getCalledLocation(calledNumber)
-
-        r = get_redis_instance()
-
-        now = timezone.now().timestamp()
-
-        try:
-            user = UserExtend.objects.get(agentUsername=callerAgentUsername).user  # On le récupère
-            lastCall = float(r.getset('lastcall:user:' + str(user.id), now) or 0)
-        except UserExtend.DoesNotExist:
-            user = None
-            lastCall = None
-
-        if lastCall is None or (now - lastCall > settings.MIN_DELAY):
-            # On crédite les phis que gagne le user
-            EarnPhi(user, lastCall)
-            Call.objects.create(user=user)
-            update_scores(user)
-            update_achievements(user)
-
-            # On envoie les positions au websocket pour l'animation
-            if user is None:
-                id = None
-                agentUsername = None
-            else:
-                id = user.id
-                agentUsername = user.UserExtend.agentUsername
-
-            global_scores = get_global_scores()
-
-            message = {
-                'type': 'call',
-                'value': {
-                    'call': {
-                        'caller': {
-                            'lat': callerLat,
-                            'lng': callerLng,
-                            'id': id,
-                            'agentUsername': agentUsername},
-                        'target': {
-                            'lat': calledLat,
-                            'lng': calledLng}
-                    },
-                    'updatedData': global_scores
-
-                }
-            }
-
-            Channel('send_message').send(message)
-
+        handle_call(username, number, now)
         return Response(status=200)
 
 
@@ -116,44 +59,13 @@ class SimulateCallView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        r = get_redis_instance()
-
-        users = User.objects.all()
+        users = UserExtend.objects.all()
         nb = users.count()
         user = users[random.randint(0, nb - 1)]
-        now = timezone.now().timestamp()
+        now = timezone.now()
 
-        callerLat, callerLng = randomLocation()
-        calledLat, calledLng = randomLocation()
+        handle_call(user.agentUsername, None, now)
 
-        lastCall = float(r.getset('lastcall:user:' + str(user.id), now) or 0)
-        EarnPhi(user, lastCall)
-
-        # On ajoute l'appel à la bdd pour pouvoir reconstruire redis si besoin
-        Call.objects.create(user=user)
-        update_scores(user)
-        update_achievements(user)
-
-        global_scores = get_global_scores()
-
-        message = {
-            'type': 'call',
-            'value': {
-                'call': {
-                    'caller': {
-                        'lat': callerLat,
-                        'lng': callerLng,
-                        'id': user.id,
-                        'agentUsername': user.UserExtend.agentUsername},
-                    'target': {
-                        'lat': calledLat,
-                        'lng': calledLng}
-                },
-                'updatedData': global_scores
-            }
-        }
-
-        Channel('send_message').send(message)
         return Response(status=200)
 
 

@@ -10,6 +10,7 @@ from channels import Channel
 # Project import
 from callcenter.models import *
 from melenchonPB.redis import get_redis_instance, format_date
+from .phi import credit_phi_from_achievement
 
 
 # Fonction principale
@@ -27,38 +28,33 @@ def update_achievements(user):
             f(user)
 
 
-def unlock_achievement(codeName, user):
-    try:
-        achievement = Achievement.objects.get(codeName=codeName)
-    except Achievement.DoesNotExist:
-        pass
-    achievementUnlock, created = AchievementUnlock.objects.get_or_create(userExtend=user.UserExtend,
-                                                                         achievement=achievement)
-    if created:  # Si l'achievement est débloqué, on crédite les phis associés
-        userExtend = user.UserExtend
-        userExtend.phi = userExtend.phi + (achievement.phi * userExtend.phi_multiplier)
-        userExtend.save()
-
-        # Pas de websocket si l'achievement est trop banal.
-        excluded_achievements = [
-            'count_initie',
-            'count_apprenti'
-        ]
-
-        if codeName not in excluded_achievements:
-            message = {
-                'type': 'achievement',
-                'value': {
-                    'agentUsername': userExtend.agentUsername,
-                    'achievement': {
-                        'name': achievement.name,
-                        'condition': achievement.condition,
-                        'phi': achievement.phi,
-                        'codeName': achievement.codeName
-                    }
-                }
+def notify_achievement_unlock(userExtend, achievement):
+    message = {
+        'type': 'achievement',
+        'value': {
+            'agentUsername': userExtend.agentUsername,
+            'achievement': {
+                'name': achievement.name,
+                'condition': achievement.condition,
+                'phi': achievement.phi,
+                'codeName': achievement.codeName
             }
-            Channel('send_message').send(message)
+        }
+    }
+    Channel('send_message').send(message)
+
+
+def unlock_achievement(codeName, user):
+    achievement = Achievement.objects.get(codeName=codeName)
+    unlock, created = AchievementUnlock.objects.get_or_create(
+        userExtend=user.UserExtend,
+        achievement=achievement
+    )
+
+    if created:
+        userExtend = user.UserExtend
+        credit_phi_from_achievement(userExtend, achievement)
+        notify_achievement_unlock(userExtend, achievement)
 
 
 def get_achievements(user):

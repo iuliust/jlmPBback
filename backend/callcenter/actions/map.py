@@ -53,9 +53,8 @@ def randomLocation():
     randomPlace = NumbersLocation.objects.all()[randomIndex]
     return randomPlace.location_lat, randomPlace.location_long
 
-def getCallerLocation(username):
-    try:
-        caller = UserExtend.objects.get(agentUsername=username) #Si l'appeleur est dans la bdd
+def getCallerLocation(caller):
+    if caller is not None:
         if caller.location_lat is None: #Si le mec n'a jamais appellé et qu'on ne connait pas sa pos
             setupLocationUser(caller.user)
         if caller.location_lat != "None": #Si on connait sa pos
@@ -63,7 +62,7 @@ def getCallerLocation(username):
             callerLng = caller.location_long
         else: #Si on connait pas la pos
             callerLat, callerLng = randomLocation() #On random
-    except UserExtend.DoesNotExist: #Si on connait pas le user
+    else:
         callerLat, callerLng = randomLocation() #On random
 
     return callerLat, callerLng
