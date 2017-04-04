@@ -1,24 +1,23 @@
 from django.utils import timezone
 from melenchonPB.redis import get_redis_instance, format_date
 import datetime
-import redis
 
 from .leaderboard import generate_leaderboard
 
 
-def update_scores(user, tzdate=None):
+def update_scores(user, date):
     r = get_redis_instance()
     pipe = r.pipeline(transaction=False)
 
     # Cles necessaires :
-    if tzdate is None:
-        tzdate = timezone.now()
-    today = format_date(tzdate)
+    if date is None:
+        date = timezone.now()
+    today = format_date(date)
 
     sevenPreviousDays = [today]
     for i in range(6):
-        tzdate += datetime.timedelta(days=1)
-        sevenPreviousDays.append(format_date(tzdate))
+        date += datetime.timedelta(days=1)
+        sevenPreviousDays.append(format_date(date))
 
     # Global counters
     pipe.incr('melenphone:call_count:alltime')

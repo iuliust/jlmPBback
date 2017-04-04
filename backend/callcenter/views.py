@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import json
 import random
 
-import redis
 from django.http import Http404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -15,16 +13,13 @@ from rest_framework.mixins import CreateModelMixin
 from rest_framework.views import APIView
 from channels import Channel
 
-from accounts.models import User
 from callcenter.actions.leaderboard import generate_leaderboards
-from callcenter.actions.map import getCallerLocation, getCalledLocation, randomLocation
 from callcenter.actions.score import get_global_scores
 from callcenter.actions.achievements import get_achievements
 from callcenter.actions.calls import handle_call
 from callcenter.exceptions import CallerCreationError, CallerValidationError
 from callcenter.models import *
 from callcenter.serializers import UserSerializer, UserExtendSerializer, CallhubCredentialsSerializer
-from melenchonPB.redis import get_redis_instance
 
 
 #################### WEBHOOKS ################################

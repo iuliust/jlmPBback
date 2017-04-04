@@ -93,6 +93,6 @@ def handle_call(username, called_number, time):
         # On crédite les phis que gagne le user
         Call.objects.create(user=user, date=time)
         credit_phi_from_call(user, time, last_call)
-        update_achievements(user)
+        update_achievements(user, time)
+        update_scores(user, time)
         notify_call(user.UserExtend, called_number)
-        update_scores(user)

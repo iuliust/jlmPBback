@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Python imports
-import redis
-
 # Django imports
-from django.utils import timezone
 from channels import Channel
+from django.utils.timezone import get_default_timezone
 
 # Project import
 from callcenter.models import *
@@ -14,7 +11,7 @@ from .phi import credit_phi_from_achievement
 
 
 # Fonction principale
-def update_achievements(user):
+def update_achievements(user, time):
     if not (user is None):
         # Appeler les autres fonctions de validation
         functions = [
@@ -25,7 +22,7 @@ def update_achievements(user):
             leaderboards
         ]
         for f in functions:
-            f(user)
+            f(user, time)
 
 
 def notify_achievement_unlock(userExtend, achievement):
@@ -94,20 +91,20 @@ def get_achievements(user):
 ########### ACHIEVEMENT CONDITIONS ################
 
 
-def leet(user):
-    now = timezone.now().astimezone(timezone.get_default_timezone())
+def leet(user, time, **kwargs):
+    now = time.astimezone(get_default_timezone())
     if (now.hour == 13 and now.minute == 37):
         unlock_achievement("leet", user)
 
 
-def earlyAdopters(user):
+def earlyAdopters(user, **kwargs):
     r = get_redis_instance()
     callersCount = r.scard('leaderbords:alltime')
     if callersCount < 100:
         unlock_achievement("early_y_etais", user)
 
 
-def dailyCalls(user):
+def dailyCalls(user, **kwargs):
     r = get_redis_instance()
     dailyCalls = int(r.zscore('melenphone:leaderboards:daily:' + format_date(timezone.now()), str(user.id)))
     if dailyCalls == 50:
@@ -118,7 +115,7 @@ def dailyCalls(user):
         unlock_achievement("daily_dodo", user)
 
 
-def callCount(user):
+def callCount(user, **kwargs):
     r = get_redis_instance()
     count = int(r.zscore('melenphone:leaderboards:alltime', str(user.id)))
     if count == 1:
@@ -155,14 +152,14 @@ def callCount(user):
         unlock_achievement("count_legendaire", user)
 
 
-def leaderboards(user):
+def leaderboards(user, time, **kwargs):
     r = get_redis_instance()
 
     if int(r.zrevrank('melenphone:leaderboards:alltime', str(user.id))) == 0:
         unlock_achievement("leaderboard_alltime", user)
 
-    if int(r.zrevrank('melenphone:leaderboards:weekly:' + format_date(timezone.now()), str(user.id))) == 0:
+    if int(r.zrevrank('melenphone:leaderboards:weekly:' + format_date(time), str(user.id))) == 0:
         unlock_achievement("leaderboard_weekly", user)
 
-    if int(r.zrevrank('melenphone:leaderboards:daily:' + format_date(timezone.now()), str(user.id))) == 0:
+    if int(r.zrevrank('melenphone:leaderboards:daily:' + format_date(time), str(user.id))) == 0:
         unlock_achievement("leaderboard_daily", user)
