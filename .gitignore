@@ -4,6 +4,7 @@
 # compiled output
 dist/
 tmp/
+dump.rdb
 .env/
 
 # dependencies
