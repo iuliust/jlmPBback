@@ -3,7 +3,7 @@
 # here are the exclusions specific to this project : #
 ######################################################
 *.pyc
-/dump.db
+/dump.rdb
 
 ########################################
 # end of project-specific instructions #
