@@ -23,6 +23,7 @@ export class HomeComponent implements OnInit {
   }
 
   makeBackendRequest() {
+    if (!isDevMode()) return;
     this.http.post('/api/simulate_call', '')
       .toPromise()
       .then((res: Response) => {
