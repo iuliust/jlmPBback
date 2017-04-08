@@ -65,22 +65,22 @@ export class AppComponent implements OnInit {
     const parsed: any = JSON.parse(message.data);
     switch (parsed.type) {
       case 'call':
-        const notif: WebSocketCallMessage = parsed.value;
+        const notif = parsed.value as WebSocketCallMessage;
         const callActionPayload = {
           call: notif,
           agentUsername: notif.call.caller.agentUsername
         };
         this.rootStore.dispatch(new AddCallAction(callActionPayload));
         this.basic.infos = notif.updatedData;
-        // if (
-        //   this.auth.currentUser !== null
-        //   && this.auth.currentUser.agentUsername === notif.call.caller.agentUsername
-        // ) {
-        //   this.auth.getExtendedInfo()
-        //     .then((info) => {
-        //       this.auth.currentUser.phi = info.phi;
-        //     });
-        // }
+        if (
+          this.auth.currentUser !== null
+          && this.auth.currentUser.agentUsername === notif.call.caller.agentUsername
+        ) {
+          this.auth.getExtendedInfo()
+            .then((info) => {
+              this.auth.currentUser.phi = info.phi;
+            });
+        }
       break;
       case 'achievement':
         const trophyMessage = parsed as AchievementNotification;
