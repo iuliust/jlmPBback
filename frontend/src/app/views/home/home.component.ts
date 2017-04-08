@@ -29,7 +29,6 @@ export class HomeComponent implements OnInit {
         if (res.status !== 200) {
           throw new Error(`erreur de communication avec le serveur : ${res.status}`);
         }
-        return res.json();
       })
       .catch(error => console.error(error));
   }

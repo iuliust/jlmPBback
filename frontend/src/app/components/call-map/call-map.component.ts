@@ -2,6 +2,7 @@ import {
   Component,
   Input,
   OnInit,
+  OnDestroy,
   AfterViewInit,
   ViewContainerRef,
   ViewRef,
@@ -9,6 +10,7 @@ import {
   ElementRef
 } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
+import { Subscription } from 'rxjs/Subscription';
 import { Store } from '@ngrx/store';
 
 import {
@@ -27,8 +29,11 @@ import * as fromCall from '../../rx/reducers/call.reducer';
   templateUrl: './call-map.component.html',
   styleUrls: ['./call-map.component.scss']
 })
-export class CallMapComponent implements OnInit, AfterViewInit {
-  calls$: Observable<fromCall.State>;
+export class CallMapComponent implements OnInit, OnDestroy, AfterViewInit {
+  newCall$: Observable<fromCall.State>;
+  newCall$Subscription: Subscription;
+  displayedCalls$: Observable<WebSocketCallMessage[]>;
+
   @ViewChild('svgDocument') svgRef: ElementRef;
   notifications: { call: CallLocationDescription, options: any}[] = [];
   shouldAnimate = false;
@@ -42,12 +47,16 @@ export class CallMapComponent implements OnInit, AfterViewInit {
     private coordsCvrtr: CoordinatesConverterService) {}
 
   ngOnInit() {
-    this.calls$ = this.rootStore.select(getCallsState);
+    this.newCall$ = this.rootStore.select(getCallsState);
     this.shouldAnimate = this.mapService.firstTime;
-    this.calls$.subscribe((state: fromCall.State) => {
-      this.pushCall(state.recentCalls[state.recentCalls.length - 1]);
+    this.newCall$Subscription = this.newCall$.subscribe((state: fromCall.State) => {
+      if (!state.lastCall) return;
+      this.pushCall(state.lastCall);
     });
-    // this.scs.room.addEventListener('message', (event) => this.onCallNotification(event), false);
+  }
+
+  ngOnDestroy() {
+    this.newCall$Subscription.unsubscribe();
   }
 
   ngAfterViewInit() {
@@ -57,15 +66,6 @@ export class CallMapComponent implements OnInit, AfterViewInit {
   getSvgDimensions(): {width: number, height: number} {
     const natel = this.svgRef;
     return {width: 1366, height: 768};
-  }
-
-  onCallNotification(event: MessageEvent) {
-    const parsed = JSON.parse(event.data);
-    switch (parsed.type) {
-      case 'call':
-        this.pushCall(parsed.value as WebSocketCallMessage);
-      break;
-    }
   }
 
   pushCall(rawNotification: WebSocketCallMessage) {
