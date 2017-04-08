@@ -105,7 +105,7 @@ export class AppComponent implements OnInit {
   }
 
   triggerAchievement() {
-    if (! isDevMode) {
+    if (! isDevMode()) {
       return;
     }
     this.http.post('/api/simulate_achievement', {})
