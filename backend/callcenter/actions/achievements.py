@@ -2,6 +2,7 @@
 
 # Python imports
 import redis
+import datetime
 
 # Django imports
 from django.utils import timezone
@@ -20,8 +21,8 @@ def update_achievements(user):
             leet,
             callCount,
             dailyCalls,
-            earlyAdopters,
-            leaderboards
+            leaderboards,
+            consecutive
         ]
         for f in functions:
             f(user)
@@ -39,26 +40,19 @@ def unlock_achievement(codeName, user):
         userExtend.phi = userExtend.phi + (achievement.phi * userExtend.phi_multiplier)
         userExtend.save()
 
-        # Pas de websocket si l'achievement est trop banal.
-        excluded_achievements = [
-            'count_initie',
-            'count_apprenti'
-        ]
-
-        if codeName not in excluded_achievements:
-            message = {
-                'type': 'achievement',
-                'value': {
-                    'agentUsername': userExtend.agentUsername,
-                    'achievement': {
-                        'name': achievement.name,
-                        'condition': achievement.condition,
-                        'phi': achievement.phi,
-                        'codeName': achievement.codeName
-                    }
+        message = {
+            'type': 'achievement',
+            'value': {
+                'agentUsername': userExtend.agentUsername,
+                'achievement': {
+                    'name': achievement.name,
+                    'condition': achievement.condition,
+                    'phi': achievement.phi,
+                    'codeName': achievement.codeName
                 }
             }
-            Channel('send_message').send(message)
+        }
+        Channel('send_message').send(message)
 
 
 def get_achievements(user):
@@ -106,7 +100,7 @@ def leet(user):
 
 def earlyAdopters(user):
     r = get_redis_instance()
-    callersCount = r.scard('leaderbords:alltime')
+    callersCount = r.scard('melenphone:leaderbords:alltime')
     if callersCount < 100:
         unlock_achievement("early_y_etais", user)
 
@@ -120,6 +114,8 @@ def dailyCalls(user):
         unlock_achievement("daily_acharne", user)
     if dailyCalls == 200:
         unlock_achievement("daily_dodo", user)
+    if dailyCalls == 300:
+        unlock_achievement("daily_holochon", user)
 
 
 def callCount(user):
@@ -170,3 +166,20 @@ def leaderboards(user):
 
     if int(r.zrevrank('melenphone:leaderboards:daily:' + format_date(timezone.now()), str(user.id))) == 0:
         unlock_achievement("leaderboard_daily", user)
+
+def consecutive(user):
+    r = get_redis_instance()
+    time = timezone.now()
+    days = 0
+
+    while r.zscore('melenphone:leaderboards:daily:' + format_date(time), str(user.id)) != None:
+        days += 1
+        if days == 2:
+            unlock_achievement("consecutive_retour", user)
+        elif days == 3:
+            unlock_achievement("consecutive_fidele", user)
+        elif days == 5:
+            unlock_achievement("consecutive_infatigable", user)
+        elif days == 10:
+            unlock_achievement("consecutive_melenphonophile", user)
+        time -= datetime.timedelta(days=1)

@@ -62,6 +62,7 @@ export class AppComponent implements OnInit {
     this.createWebsocket();
     this.auth.getProfile()
       .catch(err => console.error(err.json()));
+    this.scs.room.addEventListener('message', (event) => this.onNotif(event) , false);
     this.basic.getBasicInfo()
         .then(infos => this.basic.infos = infos)
         .catch(err => console.trace(err));
