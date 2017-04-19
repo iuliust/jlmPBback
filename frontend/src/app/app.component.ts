@@ -8,6 +8,7 @@ import { Store } from '@ngrx/store';
 
 import { RootState, reducer } from './rx/reducers';
 import { AddCallAction } from './rx/actions/call';
+import { CreateNewConnectionAction } from './rx/actions/websocket.actions';
 
 import {
   SocketConnectionService,
@@ -53,12 +54,12 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.rootStore.dispatch(new CreateNewConnectionAction(this.scs.getWebsocket()));
     this.auth.getProfile()
-      .catch(err => console.error(err.json()));
-    this.scs.room.addEventListener('message', (event) => this.onNotif(event) , false);
+        .catch(err => console.error(err.json()));
     this.basic.getBasicInfo()
-      .then(infos => this.basic.infos = infos)
-      .catch(err => console.trace(err));
+        .then(infos => this.basic.infos = infos)
+        .catch(err => console.trace(err));
   }
 
   onNotif(message: MessageEvent) {
