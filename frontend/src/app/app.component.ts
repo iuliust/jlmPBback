@@ -7,7 +7,7 @@ import 'rxjs/add/operator/toPromise';
 import { Store } from '@ngrx/store';
 
 import { RootState, reducer } from './rx/reducers';
-import { AddCallAction } from './rx/actions/call';
+import { AddCallAction } from './rx/actions/call.actions';
 import { CreateNewConnectionAction } from './rx/actions/websocket.actions';
 
 import {
@@ -24,6 +24,8 @@ import {
   AchievementComponent
 } from './components';
 
+type WebsocketScheme = 'wss' | 'ws';
+
 @Component({
   selector: 'jlm-root',
   templateUrl: './app.component.html',
@@ -31,6 +33,9 @@ import {
   entryComponents: [ AchievementComponent ]
 })
 export class AppComponent implements OnInit {
+  scheme: WebsocketScheme = (window.location.protocol === 'https:') ? 'wss' : 'ws';
+  url = `${this.scheme}://${window.location.hostname}:${window.location.port}/websocket`;
+
   get goal() {
     return this.chooseCallGoal(this.basic.infos.dailyCalls || 0);
   }
@@ -54,12 +59,16 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.rootStore.dispatch(new CreateNewConnectionAction(this.scs.getWebsocket()));
+    this.createWebsocket();
     this.auth.getProfile()
-        .catch(err => console.error(err.json()));
+      .catch(err => console.error(err.json()));
     this.basic.getBasicInfo()
         .then(infos => this.basic.infos = infos)
         .catch(err => console.trace(err));
+  }
+
+  createWebsocket() {
+    this.rootStore.dispatch(new CreateNewConnectionAction(new WebSocket(this.url)));
   }
 
   onNotif(message: MessageEvent) {
@@ -115,7 +124,7 @@ export class AppComponent implements OnInit {
   }
 
   chooseCallGoal(callCount) {
-    const sizes = [10, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 50000];
+    const sizes = [10, 50, 100, 250, 500, 1000, 2000, 3000, 4000];
     for (const value of sizes) {
       if (callCount < 0.95 * value) {
           return value;
